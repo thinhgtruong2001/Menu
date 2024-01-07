@@ -1,0 +1,55 @@
+import csv # Import csv module to work with CSV files (comma-separated values)
+import locale # Import locale module to format currency
+
+# Set the locale to the user's default locale
+locale.setlocale(locale.LC_ALL,"")
+
+ENCODING_STR = 'utf-8-sig'
+FILENAME = 'walmart_inventory.csv'
+
+# Open the CSV file in read mode with the correct encoding
+filePtr = open(FILENAME,'r', encoding = ENCODING_STR)
+
+# Create a dictionary reader object from the CSV file
+dictPtr = csv.DictReader(filePtr)
+
+# Create a dictionary to hold the primary category and its inventory value
+inventoryValueDict = dict()
+
+# Create the header row for the output
+header = '{:^30}{:^15}\n'.format('Primary Category','Inventory Value')
+
+# Define a function to calculate the inventory value
+def InventoryValueCalc(quan, price):
+    totalInventory = quan * price
+    return totalInventory
+
+# Define a function to display output for each primary category
+def DisPlayOutput(primary_category, inventory_value):
+    outputStr = '{:<30}{:>15}\n'.format(primary_category, locale.currency(inventory_value, grouping=True))
+    print(outputStr)
+
+#loop through all the file dictPtr
+for lineDict in dictPtr:
+    # Calculate the inventory value
+    inventoryVal = InventoryValueCalc(int(lineDict['quantity']), float(lineDict['price']))#Call the InventoryValueCalc function
+    # Check if the primary category is already in the dictionary
+    if lineDict['primary_category'] in inventoryValueDict.keys():
+        primCategory = lineDict['primary_category']
+        # Add the inventory value to the existing total for the primary category
+        inventoryValueDict[primCategory] = inventoryValueDict[primCategory] + inventoryVal
+    else:
+        primCategory = lineDict['primary_category']
+        # Add a new primary category and its inventory value to the dictionary
+        inventoryValueDict[primCategory] = inventoryVal
+#end for
+
+# Display the header row
+print(header)
+# Loop through the primary categories and display their inventory values
+for primCategory in inventoryValueDict.keys():
+    DisPlayOutput(primCategory, inventoryValueDict[primCategory])#call the DisplayOutput function
+
+# Calculate the total inventory value and display it
+totalValue = sum(inventoryValueDict.values())
+DisPlayOutput("Total is", totalValue)
