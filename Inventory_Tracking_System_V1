@@ -1,0 +1,52 @@
+import csv # python module that will help us process csv files (comma separated values)
+
+import locale #import locale
+locale.setlocale(locale.LC_ALL,"")
+
+ENCODING_STR = 'utf-8-sig'
+FILENAME = 'walmart_inventory.csv'
+
+#open the file with the correct encoding
+filePtr = open(FILENAME,'r', encoding = ENCODING_STR)
+
+# Create a dictionary of the file's contents
+dictPtr = csv.DictReader(filePtr)
+
+inventoryValueDict = dict() #dictionary to hold primary category and its inventory value
+
+outputStr='{:^30}{:^15}\n'.format('Primary Category','Inventory Value')
+
+#define function of inventory value calculation
+def InventoryValueCalc(quan,price):
+    totalInventory=quan*price
+    return totalInventory
+
+#define function to display total inventory output
+def DisPlayTotalOutput(inventoryvalue):
+    total=sum(list(inventoryvalue))#the inventoryvalue variable will be a list of value
+    print('{:<30} {:>15}'.format('Total',locale.currency(total,grouping=True)))
+
+#loop through the file dictPtr
+for lineDict in dictPtr:
+    # Calculate the inventory value
+    inventoryVal=InventoryValueCalc(int(lineDict['quantity']), float(lineDict['price'])) #Call the InventoryValueCalc
+    # Check if the primary category is already in the dictionary
+    if lineDict['primary_category'] in inventoryValueDict.keys():
+        primCategory=lineDict['primary_category']
+        # Add the inventory value to the existing total for the primary category
+        inventoryValueDict[primCategory]=inventoryValueDict[primCategory]+inventoryVal
+    else:
+        primCategory=lineDict['primary_category']
+        # Add a new primary category and its inventory value to the dictionary
+        inventoryValueDict[primCategory]=inventoryVal
+#end for
+
+#Loop through the primary categories and display their inventory values
+for primCategory in inventoryValueDict.keys():
+    outputStr += '{:<30}{:>15}\n'.format(primCategory, locale.currency(inventoryValueDict[primCategory],grouping=True))
+
+#Display the header and every row
+print(outputStr)
+
+#display the total output
+DisPlayTotalOutput(inventoryValueDict.values())
