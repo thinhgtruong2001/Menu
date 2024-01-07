@@ -1,0 +1,129 @@
+import locale
+locale.setlocale(locale.LC_ALL,"")
+
+testFile = open('walmart_inventory.csv','r',encoding='utf-8-sig') #opens the file
+testFile.seek(0)  #reset file pointer to the beginning of the file
+next(testFile)
+
+class Product:
+    def __init__(self, primary_category, sub_category, sku, price, quantity): #called automatically when a new object is created
+        self.category = primary_category                    # called a property
+        self.subcategory = sub_category
+        self.sku = int(sku)        # called a property
+        self.price = float(price)    # called a property
+        self.quantity = int(quantity)                  # called a property
+
+    def __str__(self):
+        return f'Primary CateGory: {self.category} sku: {self.sku} Price: {self.price} Quantity:{self.quantity}'
+
+    def InventoryValueCalc(self):
+        totalInventory = self.quantity * self.price
+        return totalInventory
+
+#Formatting Output Function
+def valueOutputFormat(primaryCategory,value):
+    print('{:<23} {:<12}'.format(primaryCategory, locale.currency(value, grouping=True)))
+
+#define empty list of product
+prodList=list()
+
+for line in testFile:
+    cells = line.strip().split(',')
+    primary_category = cells[5]
+    sub_category = cells[6]
+    sku = cells[3]
+    price = cells[4]
+    quantity = int(cells[8])
+    product = Product(primary_category,sub_category, sku, price, quantity)
+    prodList.append(product)
+
+# define an empty of primary category
+categories = list()
+#print list of primary category
+for product in prodList:
+    if product.category not in categories:
+        categories.append(product.category)
+for index in range(len(categories)):
+    print(index+1,'.',categories[index])
+print(index+2,'. Quit')
+# gather the sku numbers and put them in a list
+skuList = list()
+for product in prodList:
+    if product.sku not in skuList:
+        skuList.append(product.sku)
+while(True):
+    #try statement to make sure the users select a valid answer
+    try:
+        choiceNum=int(input("select number: ")) #user's choice
+        totalinValue=0
+
+    #if statement to allow to user to exit
+        if (choiceNum == 20):
+            break
+             #else statement to continue
+        elif (choiceNum < 1 or choiceNum > 20):
+            print("Error, this is not a valid answer")
+        else:
+            selected_category = categories[choiceNum - 1]  # get the selected primary category
+            # loop through the products and calculate the inventory value for the selected primary category
+            sub_category = []
+            # display subcategory menu
+            for product in prodList:
+                if (product.subcategory not in sub_category) and (product.category == selected_category):
+                    sub_category.append(product.subcategory)
+            for index in range(len(sub_category)):
+                print(index + 1, '.', sub_category[index])
+                #getting user's subcategory choice
+            selectSub = int(input("Select sub category"))
+            #asking user to choose add/subtract or display value
+            decision = int(input("Enter 1 to add or subtract quantity, or enter 2 to display inventory value"))
+            # if user selects add/subtract
+            if decision == 1:
+                # display the sku numbers
+                print("Sku numbers:")
+                for product in prodList:
+                    if product.category == categories[choiceNum -1] and product.subcategory == sub_category[selectSub -1]:
+                        print(product.sku)
+                #asking user if they want to add or subtract
+                amountType = input("Do you want to add or subtract?")
+                amountType = amountType[0].upper()
+                # if user chooses add
+                if amountType == "A":
+                    # ask user for sku number
+                    skuNum = int(input("Enter the sku number."))
+                    # ask user how much to add to inventory
+                    quanAm = int(input("Enter the amount you want to add."))
+                    for product in prodList:
+                        if product.category == categories[choiceNum - 1] \
+                                and product.subcategory == sub_category[selectSub - 1] and \
+                                skuNum == product.sku:
+                            product.quantity += quanAm
+                # if user chooses subtract
+                elif amountType == "S":
+                    # ask user for sku number
+                    skuNum = int(input("Enter the sku number."))
+                    # ask user how much to subtract from inventory
+                    quanAm = int(input("Enter the amount you want to subtract."))
+                    for product in prodList:
+                        if product.category == categories[choiceNum - 1] \
+                                and product.subcategory == sub_category[selectSub - 1] and \
+                                skuNum == product.sku:
+                            product.quantity -= quanAm
+                            if product.quantity < 0:
+                                product.quantity = 0
+                # if user inputs invalid answer
+                else:
+                    raise Exception()
+            # if user chooses display value
+            elif decision == 2:
+                for product in prodList:
+                    if product.category == categories[choiceNum - 1] \
+                            and product.subcategory == sub_category[selectSub-1]:
+                        curInValue = product.InventoryValueCalc()
+                        totalinValue += curInValue
+                valueOutputFormat('Inventory: ', totalinValue)
+
+    #except statement to let user know it is a invalid answer
+    except:
+        print("Error, this is not a valid answer")
+print('Thanks for using this') #ending print
